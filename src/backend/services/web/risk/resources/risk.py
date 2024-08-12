@@ -155,8 +155,15 @@ class ListRisk(RiskMeta):
     def load_risks(self, validated_request_data: dict) -> QuerySet:
         # 构造表达式
         q = Q()
-        if validated_request_data.get("strategy_id__in=") is not None:
-            q &= Q(strategy_id__in=validated_request_data.pop("strategy_id__in="))
+        # 风险等级
+        if validated_request_data.get("risk_level"):
+            q &= Q(
+                strategy_id__in=list(
+                    Strategy.objects.filter(risk_level__in=validated_request_data.pop("risk_level")).values_list(
+                        "strategy_id", flat=True
+                    )
+                )
+            )
         for key, val in validated_request_data.items():
             if not val:
                 continue
