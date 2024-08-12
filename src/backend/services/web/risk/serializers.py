@@ -196,6 +196,9 @@ class ListRiskRequestSerializer(serializers.Serializer):
     order_type = serializers.ChoiceField(
         label=gettext_lazy("排序方式"), required=False, allow_null=True, allow_blank=True, choices=OrderTypeChoices.choices
     )
+    risk_level = serializers.CharField(
+        label=gettext_lazy("Risk Level"), required=False, allow_blank=True, allow_null=True
+    )
 
     def validate(self, attrs: dict) -> dict:
         # 校验
@@ -231,6 +234,11 @@ class ListRiskRequestSerializer(serializers.Serializer):
                 data[key] = [int(i) for i in val.split(",") if i]
                 continue
             data[key] = [i for i in val.split(",") if i]
+        # 风险等级
+        if data.get("risk_level"):
+            data["strategy_id__in="] = list(
+                Strategy.objects.filter(risk_level__in=data.pop("risk_level")).values_list("strategy_id", flat=True)
+            )
         return data
 
 
