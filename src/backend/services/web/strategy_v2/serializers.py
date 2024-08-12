@@ -44,9 +44,9 @@ from services.web.strategy_v2.models import Strategy
 
 class EventFieldSerializer(serializers.Serializer):
     field_name = serializers.CharField(label=gettext_lazy("Field Name"))
-    display_name = serializers.CharField(label=gettext_lazy("Field Display Name"))
+    display_name = serializers.CharField(label=gettext_lazy("Field Display Name"), allow_blank=True)
     is_priority = serializers.BooleanField(label=gettext_lazy("Is Priority"))
-    description = serializers.CharField(label=gettext_lazy("Field Description"))
+    description = serializers.CharField(label=gettext_lazy("Field Description"), default="", allow_blank=True)
 
 
 class CreateStrategyRequestSerializer(serializers.ModelSerializer):
@@ -525,11 +525,20 @@ class EventInfoFieldSerializer(serializers.Serializer):
     def to_internal_value(self, data):
         # example 可能是 list 或 bool，均转换为字符串进行展示
         example = data["example"]
-        if isinstance(example, (bool, list, dict)):
+        if not isinstance(
+            example,
+            (
+                str,
+                int,
+                float,
+            ),
+        ):
             try:
                 data["example"] = json.dumps(example)
             except Exception:  # NOCC:broad-except(需要处理所有错误)
                 data["example"] = str(example)
+        else:
+            data["example"] = str(example)
         return super().to_internal_value(data)
 
 
