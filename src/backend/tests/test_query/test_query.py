@@ -21,7 +21,11 @@ from unittest import mock
 from core.exceptions import PermissionException
 from services.web.databus.models import CollectorPlugin
 from tests.base import TestCase
-from tests.test_esquery.constants import (
+from tests.test_query.constants import (
+    BKBASE_COLLECTOR_SEARCH_API_RESP,
+    COLLECTOR_SEARCH_CONFIG,
+    COLLECTOR_SEARCH_DATA_RESP,
+    COLLECTOR_SEARCH_PARAMS,
     ES_QUERY_SEARCH_API_RESP,
     FIELD_MAP_DATA,
     FIELD_MAP_PARAMS,
@@ -38,22 +42,44 @@ class EsQueryTest(TestCase):
         CollectorPlugin.objects.create(**PLUGIN_DATA)
 
     @mock.patch(
-        "esquery.resources.SearchLogPermission.get_auth_systems", mock.Mock(return_value=GET_AUTH_SYSTEMS_API_RESP)
+        "query.resources.SearchLogPermission.get_auth_systems",
+        mock.Mock(return_value=GET_AUTH_SYSTEMS_API_RESP),
     )
-    @mock.patch("esquery.resources.resource.esquery.es_query", mock.Mock(return_value=ES_QUERY_SEARCH_API_RESP))
+    @mock.patch("query.resources.resource.query.es_query", mock.Mock(return_value=ES_QUERY_SEARCH_API_RESP))
     def test_search(self):
         """SearchResource"""
-        result = self.resource.esquery.search(**SEARCH_PARAMS)
+        result = self.resource.query.search(**SEARCH_PARAMS)
         self.assertEqual(result, SEARCH_DATA)
 
-    @mock.patch("esquery.resources.Permission", PermissionMock())
+    @mock.patch("query.resources.Permission", PermissionMock())
     def test_search_of_not_authorized_systems(self):
         """SearchResource"""
         with self.assertRaises(PermissionException):
-            self.resource.esquery.search(**SEARCH_PARAMS)
+            self.resource.query.search(**SEARCH_PARAMS)
 
-    @mock.patch("esquery.resources.SearchLogPermission.any_search_log_permission", PermissionMock())
+    @mock.patch("query.resources.SearchLogPermission.any_search_log_permission", PermissionMock())
     def test_field_map(self):
         """FieldMapResource"""
-        result = self.resource.esquery.field_map(**FIELD_MAP_PARAMS)
+        result = self.resource.query.field_map(**FIELD_MAP_PARAMS)
         self.assertEqual(result, FIELD_MAP_DATA)
+
+
+class CollectorQueryTest(TestCase):
+    def test_collector_search_config(self):
+        """CollectorSearchConfigResource"""
+        result = self.resource.query.collector_search_config()
+        self.assertEqual(result, COLLECTOR_SEARCH_CONFIG)
+
+    @mock.patch("services.web.query.resources.GlobalMetaConfig.get", mock.Mock(return_value="test_rt"))
+    @mock.patch(
+        "services.web.query.resources.SearchLogPermission.get_auth_systems",
+        mock.Mock(return_value=GET_AUTH_SYSTEMS_API_RESP),
+    )
+    @mock.patch(
+        "services.web.query.resources.api.bk_base.query_sync.bulk_request",
+        mock.Mock(return_value=BKBASE_COLLECTOR_SEARCH_API_RESP),
+    )
+    def test_collector_search(self):
+        """CollectorSearchResource"""
+        result = self.resource.query.collector_search(**COLLECTOR_SEARCH_PARAMS)
+        self.assertEqual(result, COLLECTOR_SEARCH_DATA_RESP)

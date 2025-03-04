@@ -16,13 +16,19 @@ We undertake not to change the open source license (MIT license) applicable
 to the current version of the project delivered to anyone in the future.
 """
 
-from bk_resource import api, resource
-from bk_resource.viewsets import ResourceRoute, ResourceViewSet
+from blueapps.core.exceptions import BlueException
+from django.utils.translation import gettext_lazy
 
 
-class EsQueryViewSet(ResourceViewSet):
-    resource_routes = [
-        ResourceRoute("GET", resource.esquery.search, endpoint="search"),
-        ResourceRoute("GET", api.bk_log.index_set_operators, endpoint="operators"),
-        ResourceRoute("GET", resource.esquery.field_map, endpoint="field_map"),
-    ]
+class ClusterNotExist(BlueException):
+    MODULE_CODE = "21"
+    MESSAGE = gettext_lazy("集群不存在")
+
+
+class FilterKeyParseError(BlueException):
+    MODULE_CODE = "22"
+    MESSAGE = gettext_lazy("过滤条件 Key 解析错误: {key}")
+
+    def __init__(self, key, *args, **kwargs):
+        self.MESSAGE = self.MESSAGE.format(key=key)
+        super().__init__(*args, **kwargs)

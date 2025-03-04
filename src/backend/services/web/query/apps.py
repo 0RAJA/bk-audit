@@ -16,10 +16,11 @@ We undertake not to change the open source license (MIT license) applicable
 to the current version of the project delivered to anyone in the future.
 """
 
-from blueapps.core.exceptions import BlueException
+from django.apps import AppConfig
 from django.utils.translation import gettext_lazy
 
 
-class ClusterNotExist(BlueException):
-    MODULE_CODE = "21"
-    MESSAGE = gettext_lazy("集群不存在")
+class EsqueryConfig(AppConfig):
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "services.web.query"
+    verbose_name = gettext_lazy("ES检索")
