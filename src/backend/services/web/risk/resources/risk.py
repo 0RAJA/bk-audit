@@ -622,6 +622,7 @@ class RiskExport(RiskMeta):
             strategy_export_fields[strategy.build_sheet_name()] = risk_basic_fields + event_fields
 
         # 4. 获取风险关联的事件,按策略分组并格式化数据
+        bulk_events_params = []
         formatted_risks_by_strategy = defaultdict(list)
         risk_map = {risk.risk_id: risk for risk in risks}
         for risk_id in risk_ids:
@@ -630,10 +631,13 @@ class RiskExport(RiskMeta):
             start_time = mstimestamp_to_date_string(int(risk.event_time.timestamp() * 1000))
             end_time = mstimestamp_to_date_string(int(datetime.now().timestamp() * 1000))
             risk_id = risk.risk_id
-            events = resource.risk.list_event(
-                risk_id=risk_id, start_time=start_time, end_time=end_time, page=1, page_size=50
-            )["results"]
-
+            bulk_events_params.append(
+                {"risk_id": risk_id, "start_time": start_time, "end_time": end_time, "page": 1, "page_size": 10}
+            )
+        bulk_resp = resource.risk.list_event.bulk_request(bulk_events_params)
+        for risk_id, resp in zip(risk_ids, bulk_resp):
+            risk = risk_map[risk_id]
+            events = resp["results"]
             risk_basic_data = {
                 RiskExportField.RISK_ID: risk_id,
                 RiskExportField.RISK_TITLE: risk.title,

@@ -106,19 +106,20 @@ class TestRiskExport(TestCase):
         )
 
     def mock_get_event_list(self, risk_id, **kwargs):
-        events = {
-            "risk001": [
-                {"event_data": {"user": "alice", "action": "login_success"}},
-                {"event_data": {"user": "alice", "action": "login_fail"}},
-            ],
-            "risk002": [{"event_data": {"user": "bob", "action": "delete_file"}}],
-            "risk003": [{"event_data": {"ip": "127.0.0.1"}}, {"event_data": {"ip": "192.168.1.1"}}],
-            "risk004": [],  # risk_4 has no events
-        }
-        return {"results": events.get(risk_id, [])}
+        return [
+            {
+                "results": [
+                    {"event_data": {"user": "alice", "action": "login_success"}},
+                    {"event_data": {"user": "alice", "action": "login_fail"}},
+                ]
+            },
+            {"results": [{"event_data": {"user": "bob", "action": "delete_file"}}]},
+            {"results": [{"event_data": {"ip": "127.0.0.1"}}, {"event_data": {"ip": "192.168.1.1"}}]},
+            {"results": []},
+        ]
 
     @mock.patch("services.web.risk.models.Risk.load_authed_risks")
-    @mock.patch.object(ListEvent, "request")
+    @mock.patch.object(ListEvent, "bulk_request")
     def test_risk_export(self, mock_get_event_list, mock_load_authed_risks):
         # Mock
         mock_load_authed_risks.return_value = Risk.objects.all()

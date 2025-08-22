@@ -151,7 +151,7 @@ class ListEventRequestSerializer(serializers.Serializer):
     def to_internal_value(self, data: dict) -> dict:
         new_data = super().to_internal_value(data)
         for key, val in data.items():
-            if key not in new_data.keys():
+            if key not in new_data.keys() and key not in ["_request"]:
                 new_data[key] = val
         return new_data
 
