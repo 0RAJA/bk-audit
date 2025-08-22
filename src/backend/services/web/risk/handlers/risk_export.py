@@ -34,6 +34,7 @@ class MultiSheetRiskExporterXlsx(BaseXlsxFileExporter):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.header_fmt = self.workbook.add_format(self.header_format)
+        self.text_fmt = self.workbook.add_format({'num_format': '@'})
 
     def write(self, sheets_data: Dict[str, List[Dict[str, Any]]], sheets_headers: Dict[str, List[ExportField]]):
         """
@@ -76,5 +77,5 @@ class MultiSheetRiskExporterXlsx(BaseXlsxFileExporter):
             for row_num, row_data in enumerate(data_rows, start=1):
                 # 按表头顺序提取数据
                 row_values = [str(row_data.get(raw_name, "")) for raw_name in raw_field_names]
-                worksheet.write_row(row_num, 0, row_values)
+                worksheet.write_row(row_num, 0, row_values, self.text_fmt)
             gc.collect()
