@@ -20,7 +20,7 @@ import datetime
 import json
 import math
 import re
-from typing import List, Optional, Union
+from typing import List, Optional, Tuple, Union
 
 from bk_resource import resource
 from blueapps.utils.logger import logger
@@ -47,6 +47,7 @@ from services.web.risk.handlers import EventHandler
 from services.web.risk.models import Risk
 from services.web.risk.parser import RiskNoticeParser
 from services.web.risk.serializers import CreateRiskSerializer
+from services.web.strategy_v2.constants import StrategyStatusChoices
 from services.web.strategy_v2.models import Strategy
 
 
@@ -157,7 +158,7 @@ class RiskHandler:
         create_params["title"] = self.render_risk_title(create_params)
         return create_params
 
-    def create_risk(self, event: dict) -> (bool, Risk):
+    def create_risk(self, event: dict) -> Tuple[bool, Optional[Risk]]:
         """
         创建或更新风险
         """
@@ -168,6 +169,19 @@ class RiskHandler:
             logger.error("[CreateRiskFailed] Event Invalid: %s", json.dumps(event))
             return False, None
         event = serializer.validated_data
+
+        # 若关联策略已停用，则不生成风险
+        status = Strategy.objects.filter(strategy_id=event["strategy_id"]).values_list("status", flat=True).first()
+        if not status:
+            logger.warning("[CreateRiskFailed] Strategy not found. strategy_id=%s", event["strategy_id"])
+            return False, None
+        if status == StrategyStatusChoices.DISABLED.value:
+            logger.info(
+                "[SkipCreateRisk] Strategy disabled. strategy_id=%s, raw_event_id=%s",
+                event["strategy_id"],
+                event.get("raw_event_id"),
+            )
+            return False, None
 
         # 检查是否有已存在的
         # 策略ID相同，原始事件ID相同，不为关单状态或事件时间小于最后发现时间
