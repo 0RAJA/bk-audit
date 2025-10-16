@@ -200,7 +200,7 @@ class ListRisk(RiskMeta):
         paged_queryset, page = paginate_queryset(
             queryset=risks, request=request, base_queryset=Risk.annotated_queryset()
         )
-        paged_queryset = Risk.prefetch_strategy_tags(paged_queryset).order_by(order_field)
+        paged_queryset: QuerySet[Risk] = self._apply_ordering(Risk.prefetch_strategy_tags(paged_queryset), order_field)
         paged_risks = list(paged_queryset)
         risk_ids = [risk.risk_id for risk in paged_risks]
         return paged_risks, page, risk_ids
