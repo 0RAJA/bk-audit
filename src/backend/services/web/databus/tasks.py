@@ -449,6 +449,11 @@ def sync_asset_bkbase_rt_ids():
             default="",
         )
         if result_table_id:
+            logger.info(
+                "[sync_asset_bkbase_rt_ids] config_key:%s already exists, result_table_id:%s",
+                config_key,
+                result_table_id,
+            )
             continue
 
         snapshot: Optional[Snapshot] = (
@@ -463,8 +468,14 @@ def sync_asset_bkbase_rt_ids():
             .first()
         )
         if not snapshot or not snapshot.bkbase_table_id:
+            logger.info("[sync_asset_bkbase_rt_ids] config_key:%s, snapshot not found", config_key)
             continue
 
+        logger.info(
+            "[sync_asset_bkbase_rt_ids] config_key:%s, snapshot found, result_table_id:%s",
+            config_key,
+            snapshot.bkbase_table_id,
+        )
         GlobalMetaConfig.set(
             config_key,
             str(snapshot.bkbase_table_id),
