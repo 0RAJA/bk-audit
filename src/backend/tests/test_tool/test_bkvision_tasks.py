@@ -145,6 +145,9 @@ class UpdateBkVisionConfigTaskTestCase(TestCase):
         query_meta.return_value = self.build_meta(filters=filters)
 
         update_bkvision_config()
+        """""
+        测试改动
+        """
 
         self.tool.refresh_from_db()
         self.assertFalse(self.tool.is_bkvision)
