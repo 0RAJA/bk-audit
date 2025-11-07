@@ -164,6 +164,9 @@ class UpdateBkVisionConfigTaskTestCase(TestCase):
         self.tool.save(update_record=False, update_fields=["is_bkvision"])
 
         update_bkvision_config()
+        """""
+        测试改动
+        """
 
         self.tool.refresh_from_db()
         self.assertTrue(self.tool.is_bkvision)
